@@ -1,8 +1,11 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
 
-require_once(APPPATH . 'third_party/fpdf/fpdf.php');
-require_once(APPPATH . 'third_party/fpdi/src/autoload.php');
+require_once APPPATH . '../vendor/autoload.php';
+
+// Pakai alias untuk FPDI
+use setasign\Fpdi\Fpdi;
+use setasign\Fpdi\PdfReader;
 
 class Sertifikat extends CI_Controller
 {
@@ -218,5 +221,30 @@ class Sertifikat extends CI_Controller
         $this->add_signature_to_pdf($source_file, $output_file, $signature_image, $x, $y);
 
         echo "Tanda tangan berhasil disimpan di posisi ($x, $y)";
+    }
+
+
+    // Agrh new
+    public function generate_pdf()
+    {
+        $pdf = new Fpdi();
+
+        $file = FCPATH . 'assets/pdf/contoh.pdf';
+        $pageCount = $pdf->setSourceFile($file);
+        $templateId = $pdf->importPage(1);
+
+        // Ambil ukuran asli
+        $size = $pdf->getTemplateSize($templateId);
+
+        // Tambahkan halaman baru dengan ukuran asli PDF
+        $pdf->AddPage($size['orientation'], [$size['width'], $size['height']]);
+
+        // Tempelkan halaman dan sisipkan tanda tangan
+        $pdf->useTemplate($templateId);
+
+        $ttdPath = FCPATH . 'assets/ttd/ttd.png';
+        $pdf->Image($ttdPath, $size['width'] - 85, $size['height'] - 50, 15);
+
+        $pdf->Output('I', 'dokumen_dengan_ttd.pdf');
     }
 }
